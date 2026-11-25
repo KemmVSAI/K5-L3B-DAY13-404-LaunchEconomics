@@ -136,7 +136,66 @@ if __name__ == '__main__':
             f'{nhan:18s} | viec_tc/th={viec_thang:8,.0f} | co_dinh/viec={co_dinh_viec:6,.0f} đ '
             f'| cps+cd [sim]={tong_cps:6,.0f} đ ({tong_cps / BASELINE:.2f}x)'
         )
-    # TODO CP2 · Nhiệm vụ B: đổi từng yếu tố, ghi vào bảng độ nhạy.
+    print('\n--- B1 · Bảng độ nhạy (đổi từng yếu tố) ---')
+    goc = ket_qua['cps']
+    kich_ban = {
+        'Giá token gấp đôi': dict(gia_vao=52, gia_ra=260),
+        'Giá token giảm một nửa': dict(gia_vao=13, gia_ra=65),
+        'Tỉ lệ xem lại gấp đôi': dict(he_so_xem_lai=2.0),
+        'Tỉ lệ xem lại giảm một nửa': dict(he_so_xem_lai=0.5),
+        'Số ca làm lại gấp đôi': dict(he_so_lam_lai=2.0),
+        'Số ca làm lại giảm một nửa': dict(he_so_lam_lai=0.5),
+        'Lương nhân viên tăng 25%': dict(luong_phut=2500),
+        'Chỉ cho chạy tối đa 2 lần': dict(max_lan_chay=2),
+        'Chỉ cho chạy 1 lần': dict(max_lan_chay=1),
+    }
+    print(f'{"Gốc (A2)":28s} | {goc:8,.0f} đ [sim]')
+    for ten, kw in kich_ban.items():
+        cps_kb = mo_hinh(runs, reqs, **kw)['cps']
+        pct = (cps_kb / goc - 1.0) * 100
+        print(f'{ten:28s} | {cps_kb:8,.0f} đ [sim] | {pct:+6.1f}%')
+
+    print('\n--- B2 · Đổi một cặp và xếp hạng ---')
+    kq_cap = mo_hinh(runs, reqs, gia_vao=52, gia_ra=260, he_so_xem_lai=2.0)
+    pct_cap = (kq_cap['cps'] / goc - 1.0) * 100
+    print(f'Giá token x2 + Xem lại x2    | {kq_cap["cps"]:8,.0f} đ [sim] | {pct_cap:+6.1f}%')
+    tac_dong = [
+        ('Số ca làm lại (x2)', abs(mo_hinh(runs, reqs, he_so_lam_lai=2.0)['cps'] / goc - 1.0) * 100),
+        ('Tỉ lệ xem lại (x2)', abs(mo_hinh(runs, reqs, he_so_xem_lai=2.0)['cps'] / goc - 1.0) * 100),
+        ('Lương nhân viên (+25%)', abs(mo_hinh(runs, reqs, luong_phut=2500)['cps'] / goc - 1.0) * 100),
+        ('Giá token (x2)', abs(mo_hinh(runs, reqs, gia_vao=52, gia_ra=260)['cps'] / goc - 1.0) * 100),
+    ]
+    tac_dong.sort(key=lambda x: x[1], reverse=True)
+    print('Xếp hạng 3 yếu tố nhạy nhất:', ' · '.join(f'{i}. {ten} ({val:.1f}%)' for i, (ten, val) in enumerate(tac_dong[:3], 1)))
+
+    print('\n--- B3 · Giới hạn chạy lại có thật sự rẻ hơn ---')
+    for gio_han in [1, 2, 3]:
+        kq_gh = mo_hinh(runs, reqs, max_lan_chay=gio_han)
+        khong_tc_gh = len(reqs) - kq_gh['thanh_cong']
+        ca_he_thong = kq_gh['tong'] + khong_tc_gh * BASELINE
+        print(
+            f'Tối đa {gio_han} lần | tong [sim]={kq_gh["tong"]:10,.0f} đ '
+            f'| khong_tc={khong_tc_gh:3d} | ca_he_thong [sim]={ca_he_thong:10,.0f} đ '
+            f'| cps [sim]={kq_gh["cps"]:6,.0f} đ'
+        )
+
+    print('\n--- B4 · Nếu phải xem lại tất cả (noi_dia + hang_nang) ---')
+    runs_pv = runs[runs['request_id'].isin(pham_vi['request_id'])]
+    co_ok_pv = runs_pv.loc[runs_pv['status'] == 'ok', 'request_id'].nunique()
+    so_lam_lai_pv = int((pham_vi['ket_qua'] == 'lam_lai').sum())
+    phi_ai_pv = kq_pv['token'] + kq_pv['tool']
+    tc_pv = kq_pv['thanh_cong']
+    xem_lai_100 = co_ok_pv * 5 * LUONG_PHUT
+    tb_phut_lam_lai = reqs.loc[reqs['ket_qua'] == 'lam_lai', 'phut_lam_lai_simulated'].mean()
+    for nhan, phut_ll in [('9 phút/ca (đề bài)', 9.0), (f'{tb_phut_lam_lai:.1f} phút/ca (TB dữ liệu)', tb_phut_lam_lai)]:
+        lam_lai_100 = so_lam_lai_pv * phut_ll * LUONG_PHUT
+        tong_100 = phi_ai_pv + xem_lai_100 + lam_lai_100
+        cps_100 = tong_100 / tc_pv
+        hoa_von_xem = (tc_pv * BASELINE - phi_ai_pv - lam_lai_100) / (co_ok_pv * LUONG_PHUT)
+        print(
+            f'{nhan:26s} | tong [sim]={tong_100:10,.0f} đ | cps [sim]={cps_100:7,.0f} đ '
+            f'({cps_100 / BASELINE:.2f}x) | hoà vốn xem lại <= {hoa_von_xem:.1f} phút'
+        )
     # TODO CP4 · Nhiệm vụ D: cỡ mẫu.
     #   from statsmodels.stats.proportion import proportion_effectsize
     #   from statsmodels.stats.power import NormalIndPower
