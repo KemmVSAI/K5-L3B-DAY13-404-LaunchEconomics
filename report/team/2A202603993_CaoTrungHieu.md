@@ -4,7 +4,8 @@
 
 - Họ tên: Cao Trung Hiếu
 - MSSV: 2A202603993
-- Email:
+- Email: 26ai.hieuct@vinuni.edu.vn
+- GitHub: HieuCaoTlu
 - Vai trong nhóm: Người gắn nhãn 1
 
 ## 2. Phần việc phụ trách

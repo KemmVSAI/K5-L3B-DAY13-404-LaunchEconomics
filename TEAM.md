@@ -11,7 +11,7 @@
 
 | STT | Họ tên | MSSV | Email | GitHub | Vai trò |
 | --: | ------ | ---- | ----- | ------ | ------- |
-|   1 | Cao Trung Hiếu | 2A202603993 |       |        | Người gắn nhãn 1 |
+|   1 | Cao Trung Hiếu | 2A202603993 | 26ai.hieuct@vinuni.edu.vn | HieuCaoTlu | Người gắn nhãn 1 |
 |   2 |        |      |       |        |         |
 |   3 |        |      |       |        |         |
 |   4 |        |      |       |        |         |
