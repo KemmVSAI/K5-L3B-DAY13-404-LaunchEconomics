@@ -12,7 +12,7 @@
 | STT | Họ tên | MSSV | Email | GitHub | Vai trò |
 | --: | ------ | ---- | ----- | ------ | ------- |
 |   1 | Cao Trung Hiếu | 2A202603993 | 26ai.hieuct@vinuni.edu.vn | HieuCaoTlu | Người gắn nhãn 1 |
-|   2 |        |      |       |        |         |
+|   2 | Cao Phạm Thành Đạt | 2A202603970 | 26ai.datcpt@vinuni.edu.vn | tcaopham216-gif | Người kiểm số |
 |   3 |        |      |       |        |         |
 |   4 |        |      |       |        |         |
 
@@ -51,3 +51,17 @@ Sao chép mục dưới đây cho từng thành viên.
 ### Bằng chứng
 
 - `report/team/bang_loi.md`, `report/team/2A202603993_CaoTrungHieu.md`.
+
+## CaoPhamThanhDat-2A202603970
+
+### Phần việc phụ trách
+
+Kiểm số A1–A4 và B1–B4, điền bảng chi phí.
+
+### Đóng góp cụ thể
+
+Đối chiếu token và tool trên toàn bộ 1.624 lượt chạy; kiểm mẫu số 978 và chi phí nhân viên ở từng giới hạn chạy lại.
+
+### Bằng chứng
+
+`report/team/bang_chi_phi.md`, mục A2 và B3; báo cáo cá nhân `report/team/2A202603970_CaoPhamThanhDat.md`.
