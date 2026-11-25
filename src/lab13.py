@@ -3,8 +3,11 @@ Chạy trong thư mục src/: python3 lab13.py   (cần pandas; Nhiệm vụ D c
 Không cần khoá API. Điền các chỗ ghi VIẾT Ở ĐÂY (đánh dấu TODO CP1…CP4). Dữ liệu trong hai file CSV là giả lập.
 Bản gốc chưa sửa nằm ở lab13_starter.py.
 """
+from statistics import NormalDist
 import math
 import pandas as pd
+from statsmodels.stats.proportion import proportion_effectsize
+from statsmodels.stats.power import NormalIndPower
 
 # Bảng giá GIẢ ĐỊNH của lab (không phải giá thật của nhà cung cấp nào)
 GIA_VAO = 26        # đồng cho 1.000 token đầu vào
@@ -196,6 +199,50 @@ if __name__ == '__main__':
             f'{nhan:26s} | tong [sim]={tong_100:10,.0f} đ | cps [sim]={cps_100:7,.0f} đ '
             f'({cps_100 / BASELINE:.2f}x) | hoà vốn xem lại <= {hoa_von_xem:.1f} phút'
         )
-    # TODO CP4 · Nhiệm vụ D: cỡ mẫu.
-    #   from statsmodels.stats.proportion import proportion_effectsize
-    #   from statsmodels.stats.power import NormalIndPower
+    print('\n--- CP4 · Nhiệm vụ D: Cỡ mẫu và luật an toàn ---')
+    def co_mau(p1, p2, alpha=0.05, power=0.80):
+        za = NormalDist().inv_cdf(1.0 - alpha / 2.0)
+        zb = NormalDist().inv_cdf(power)
+        pb = (p1 + p2) / 2.0
+        return math.ceil(
+            (za * math.sqrt(2.0 * pb * (1.0 - pb)) + zb * math.sqrt(p1 * (1.0 - p1) + p2 * (1.0 - p2))) ** 2
+            / (p2 - p1) ** 2
+        )
+
+    p1, icc = 0.70, 0.02
+    n_yc = co_mau(p1, 0.75)
+    de_75 = 1.0 + (75 - 1) * icc
+    n_nv_75 = math.ceil(n_yc * de_75)
+    so_nv_nhom = math.ceil(n_nv_75 / 75)
+    max_20_nv = 20 / icc
+    max_6_depot = 6 / icc
+
+    n_6diem = co_mau(p1, 0.76)
+    # 20*m / (1 + (m-1)*0.02) >= n_6diem  =>  m*(20 - 0.02*n_6diem) >= 0.98*n_6diem
+    m_6diem = math.ceil((1.0 - icc) * n_6diem / (20.0 - icc * n_6diem))
+    de_6diem = 1.0 + (m_6diem - 1) * icc
+
+    es_5diem = abs(proportion_effectsize(0.75, p1))
+    power_5diem_o_859 = NormalIndPower().power(effect_size=es_5diem, nobs1=n_6diem, alpha=0.05, ratio=1.0)
+    n_statsmodels_5 = math.ceil(NormalIndPower().solve_power(effect_size=es_5diem, alpha=0.05, power=0.80, ratio=1.0))
+
+    print(f'D1.a Chia theo yêu cầu (+5đ)          : {n_yc:,} yêu cầu/nhóm (statsmodels={n_statsmodels_5:,})')
+    print(f'D1.b Theo nhân viên (m=75, DE={de_75:.2f})  : {n_nv_75:,} yc/nhóm -> {so_nv_nhom} nv/nhóm (tổng {so_nv_nhom * 2} > 40)')
+    print(f'D1.c Trần 20 nhân viên/nhóm (c/ICC)   : tối đa {max_20_nv:,.0f} < {n_yc:,} (không đạt +5đ)')
+    print(f'D1.d Trần 6 depot/nhóm (c/ICC)        : tối đa {max_6_depot:,.0f} < {n_yc:,} (và < 20 cụm/nhóm)')
+    print(f'D1.e Mức chênh +6đ (20 nv/nhóm)       : n={n_6diem:,}/nhóm, m>={m_6diem} yc/nv, DE={de_6diem:.2f}')
+    print(f'     Power thực tế nếu chênh chỉ +5đ  : {power_5diem_o_859:.2f}')
+
+    ti_le_mo_lai_all = reqs['mo_lai_trong_7_ngay'].mean() * 100
+    ti_le_mo_lai_pv = pham_vi['mo_lai_trong_7_ngay'].mean() * 100
+    print(f'Tỉ lệ mở lại 7 ngày (toàn mẫu)        : {ti_le_mo_lai_all:.2f}% ({reqs["mo_lai_trong_7_ngay"].sum()}/{len(reqs)})')
+    print(f'Tỉ lệ mở lại 7 ngày (noi_dia+hang_nang): {ti_le_mo_lai_pv:.2f}% ({pham_vi["mo_lai_trong_7_ngay"].sum()}/{len(pham_vi)})')
+
+    print('\n--- CP5 · Nhiệm vụ E1: Tính thử chỉ số trên 1.200 yêu cầu ---')
+    dong_24h_khong_mo_lai = (reqs['dong_trong_24h'] == 1) & (reqs['mo_lai_trong_7_ngay'] == 0)
+    duoc_xem = reqs[reqs['duoc_xem_lai'] == 1]
+    bo_qua_goi_y = duoc_xem['quyet_dinh_xem_lai'].isin(['sua', 'bo'])
+    loi_lot_khach = reqs['mo_lai_trong_7_ngay'] == 1
+    print(f'Chính (đóng 24h & không mở lại 7d)    : {dong_24h_khong_mo_lai.mean() * 100:.2f}% ({int(dong_24h_khong_mo_lai.sum())}/{len(reqs)})')
+    print(f'Dùng (tỉ lệ bỏ qua gợi ý sua + bo)    : {bo_qua_goi_y.mean() * 100:.2f}% ({int(bo_qua_goi_y.sum())}/{len(duoc_xem)})')
+    print(f'An toàn (mở lại trong 7 ngày)         : {loi_lot_khach.mean() * 100:.2f}% ({int(loi_lot_khach.sum())}/{len(reqs)})')
