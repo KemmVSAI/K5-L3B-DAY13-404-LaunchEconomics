@@ -34,6 +34,11 @@ Chi tiết đóng góp của bốn thành viên nằm trong `TEAM.md` và các b
 
 ## 7. Hạn chế và hướng cải thiện
 
-Trước khi thuyết trình, nhóm cần làm rõ bốn điểm: (1) công khai đánh đổi power `0,64` ở MDE 5 điểm; (2) nêu B4 và lộ trình hạ tỉ lệ xem lại để giữ dưới 8.000 đ/việc; (3) ghi rõ rollback có hiệu lực trong 30 phút; (4) giao điều kiện cho đúng vai trò có thẩm quyền thay vì ghi chung là “Người kiểm số”. Hạn chế là nhiều chi phí vẫn [simulated], nên pilot phải ghi event và kiểm tra luật dừng trước quyết định 2027-01-05. Nhóm không được diễn giải số liệu hiện tại như bằng chứng trợ lý đã cải thiện kết quả.
+Sau góp ý duyệt chéo, nhóm đã cập nhật trực tiếp bốn điểm vào `ho_so_launch_v0.md`: (1) công khai đánh đổi power còn `0,64` ở MDE 5 điểm; (2) nêu rõ chi phí xem lại 100% (`11.743–12.415 đ/việc [simulated]`) và lộ trình giảm xem lại theo bậc để giữ dưới `8.000 đ/việc`; (3) bổ sung thời hạn rollback `30 phút` và ngưỡng dừng `> 40% trong 1 tuần`; (4) giao toàn bộ mục và điều kiện cho đúng vai trò có thẩm quyền (`Giám đốc vận hành LogiX-VN`, `PM trợ lý hoàn phí`, `Kỹ sư trưởng agent`, `Trưởng nhóm CSKH`) thay vì ghi `Người kiểm số`. Hạn chế còn lại là chi phí thời gian vẫn ở mức `[simulated]`, nên pilot phải bật đủ event `trace_id` và đo thật từ tuần 1 trước ngày quyết định `2027-01-05`. Nhóm không diễn giải số liệu chạy thử hiện tại như bằng chứng trợ lý đã cải thiện kết quả.
 
 ## 8. Tài liệu tham khảo
+
+- Erol và cộng sự, *Cost-of-Pass: An Economic Framework for Evaluating Language Models* ([arxiv.org/abs/2504.13359](https://arxiv.org/abs/2504.13359)).
+- Google PAIR, *People + AI Guidebook*, chương "Errors + Graceful Failure" ([pair.withgoogle.com](https://pair.withgoogle.com)).
+- Tài liệu thư viện `statsmodels`, lớp `NormalIndPower` (`statsmodels.stats.power`).
+- Bộ dữ liệu giả lập và hướng dẫn Lab 13: `docs/du_lieu_va_cong_thuc.md`, `docs/Lab13_Huong_dan_chi_tiet_buoi_chieu.md`.
