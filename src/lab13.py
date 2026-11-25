@@ -1,10 +1,13 @@
 """Lab 13 · Định giá agent và lập kế hoạch pilot (Gate 2a) — bài làm của nhóm (file nộp).
 Chạy trong thư mục src/: python3 lab13.py   (cần pandas; Nhiệm vụ D cần thêm statsmodels)
-Không cần khoá API. Điền các chỗ ghi VIẾT Ở ĐÂY (đánh dấu TODO CP1…CP4). Dữ liệu trong hai file CSV là giả lập.
+Không cần khoá API. Các hàm CP1–CP4 và phần tính chỉ số CP5 đã được hoàn thiện. Dữ liệu trong hai file CSV là giả lập.
 Bản gốc chưa sửa nằm ở lab13_starter.py.
 """
+from statistics import NormalDist
 import math
 import pandas as pd
+from statsmodels.stats.proportion import proportion_effectsize
+from statsmodels.stats.power import NormalIndPower
 
 # Bảng giá GIẢ ĐỊNH của lab (không phải giá thật của nhà cung cấp nào)
 GIA_VAO = 26        # đồng cho 1.000 token đầu vào
@@ -15,7 +18,7 @@ BASELINE = 12000    # đồng cho 1 yêu cầu khi nhân viên tự làm (6 phú
 
 
 # ---------- Nhiệm vụ A1 · Kinh tế của việc chạy lại ----------
-# TODO CP1: viết ba hàm dưới đây cho tới khi kiem_tra_dap_an_biet_truoc() in ĐẠT.
+# Ba hàm kiểm tra đáp án biết trước của CP1.
 def so_lan_chay_ky_vong(p, k=None):
     """Số lần chạy trung bình cho 1 yêu cầu khi mỗi lần đúng với xác suất p.
     k = số lần chạy tối đa; k=None nghĩa là chạy lại đến khi đúng."""
@@ -41,7 +44,7 @@ def kiem_tra_dap_an_biet_truoc():
 
 
 # ---------- Nhiệm vụ A2 · Mô hình chi phí từ trace ----------
-# TODO CP1: viết mo_hinh; CP2 gọi lại hàm này với tham số giá và hệ số đã đổi.
+# Mô hình chi phí CP1; CP2 gọi lại hàm này với tham số giá và hệ số đã đổi.
 def mo_hinh(runs, reqs, gia_vao=26, gia_ra=130, gia_tool=15, luong_phut=2000,
             he_so_xem_lai=1.0, he_so_lam_lai=1.0, max_lan_chay=None):
     """Trả về dict gồm: token, tool, xem_lai, lam_lai, tong, thanh_cong, cps (chi phí mỗi việc thành công).
@@ -196,6 +199,43 @@ if __name__ == '__main__':
             f'{nhan:26s} | tong [sim]={tong_100:10,.0f} đ | cps [sim]={cps_100:7,.0f} đ '
             f'({cps_100 / BASELINE:.2f}x) | hoà vốn xem lại <= {hoa_von_xem:.1f} phút'
         )
-    # TODO CP4 · Nhiệm vụ D: cỡ mẫu.
-    #   from statsmodels.stats.proportion import proportion_effectsize
-    #   from statsmodels.stats.power import NormalIndPower
+    print('\n--- CP4 · Nhiệm vụ D: Cỡ mẫu và luật an toàn ---')
+    def co_mau(p1, p2, alpha=0.05, power=0.80):
+        za = NormalDist().inv_cdf(1.0 - alpha / 2.0)
+        zb = NormalDist().inv_cdf(power)
+        pb = (p1 + p2) / 2.0
+        return math.ceil(
+            (za * math.sqrt(2.0 * pb * (1.0 - pb)) + zb * math.sqrt(p1 * (1.0 - p1) + p2 * (1.0 - p2))) ** 2
+            / (p2 - p1) ** 2
+        )
+
+    p1, icc = 0.70, 0.02
+    n_yc = co_mau(p1, 0.75)
+    de_75 = 1.0 + (75 - 1) * icc
+    n_nv_75 = math.ceil(n_yc * de_75)
+    so_nv_nhom = math.ceil(n_nv_75 / 75)
+    max_20_nv = 20 / icc
+    max_6_depot = 6 / icc
+    n_6diem = co_mau(p1, 0.76)
+    m_6diem = math.ceil((1.0 - icc) * n_6diem / (20.0 - icc * n_6diem))
+    de_6diem = 1.0 + (m_6diem - 1) * icc
+    es_5diem = abs(proportion_effectsize(0.75, p1))
+    power_5diem_o_859 = NormalIndPower().power(effect_size=es_5diem, nobs1=n_6diem, alpha=0.05, ratio=1.0)
+    n_statsmodels_5 = math.ceil(NormalIndPower().solve_power(effect_size=es_5diem, alpha=0.05, power=0.80, ratio=1.0))
+    print(f'D1.a Chia theo yêu cầu (+5đ): {n_yc:,} yêu cầu/nhóm (statsmodels={n_statsmodels_5:,})')
+    print(f'D1.b Theo nhân viên (m=75, DE={de_75:.2f}): {n_nv_75:,} yc/nhóm -> {so_nv_nhom} nv/nhóm')
+    print(f'D1.c Trần 20 nhân viên/nhóm: tối đa {max_20_nv:,.0f} hiệu dụng < {n_yc:,}')
+    print(f'D1.d Trần 6 depot/nhóm: tối đa {max_6_depot:,.0f} hiệu dụng < {n_yc:,}')
+    print(f'D1.e Mức chênh +6đ: n={n_6diem:,}/nhóm, m>={m_6diem} yc/nv, DE={de_6diem:.2f}')
+    print(f'Power thực tế nếu chênh chỉ +5đ: {power_5diem_o_859:.2f}')
+    print(f'Tỉ lệ mở lại 7 ngày toàn mẫu: {reqs["mo_lai_trong_7_ngay"].mean() * 100:.2f}%')
+    print(f'Tỉ lệ mở lại 7 ngày phạm vi pilot: {pham_vi["mo_lai_trong_7_ngay"].mean() * 100:.2f}%')
+
+    print('\n--- CP5 · Nhiệm vụ E1: Tính thử chỉ số trên 1.200 yêu cầu ---')
+    dong_24h_khong_mo_lai = (reqs['dong_trong_24h'] == 1) & (reqs['mo_lai_trong_7_ngay'] == 0)
+    duoc_xem = reqs[reqs['duoc_xem_lai'] == 1]
+    bo_qua_goi_y = duoc_xem['quyet_dinh_xem_lai'].isin(['sua', 'bo'])
+    loi_lot_khach = reqs['mo_lai_trong_7_ngay'] == 1
+    print(f'Chính: {dong_24h_khong_mo_lai.mean() * 100:.2f}% ({int(dong_24h_khong_mo_lai.sum())}/{len(reqs)})')
+    print(f'Dùng: {bo_qua_goi_y.mean() * 100:.2f}% ({int(bo_qua_goi_y.sum())}/{len(duoc_xem)})')
+    print(f'An toàn: {loi_lot_khach.mean() * 100:.2f}% ({int(loi_lot_khach.sum())}/{len(reqs)})')

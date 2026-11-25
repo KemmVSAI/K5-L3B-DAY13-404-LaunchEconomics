@@ -34,4 +34,4 @@
 ## 6. Tự đánh giá
 
 - Đã hoàn thành phần việc được giao cho người gắn nhãn 2 và giữ hồ sơ.
-- Còn cần nhóm điền tên người gắn nhãn 1, so sánh hai bộ nhãn và tính tỉ lệ đồng thuận trước khi nộp.
+- Đã so sánh hai bộ nhãn và ghi tỉ lệ đồng thuận 20/20 = 100%; hai thành viên còn lại cần bổ sung thông tin thật vào `TEAM.md` trước khi nộp.
